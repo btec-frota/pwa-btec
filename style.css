@@ -1,8 +1,8 @@
 :root {
-    --btec-azul-master: #0a1931;   /* Fundo Azul Sólido Profissional */
+    --btec-azul-master: #0a1931;   /* Fundo Azul Sólido Central */
     --btec-azul-card: #15305b;     /* Módulos internos */
     --btec-azul-input: #1f427b;    /* Caixas de digitação */
-    --btec-vermelho-alerta: #ff4a4a;/* Vermelho para avisos críticos */
+    --btec-vermelho-alerta: #ff4a4a;/* Avisos e erros críticos */
     --cor-sucesso: #00e676;
     --cor-texto: #ffffff;
     --cor-subtext: #b0c4de;
@@ -10,10 +10,9 @@
 
 * {
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
     box-sizing: border-box;
 }
-input, textarea { user-select: text; }
+input, textarea, select { font-family: inherit; }
 
 body {
     background: radial-gradient(circle, #102a54 0%, var(--btec-azul-master) 100%);
@@ -40,14 +39,13 @@ body {
     margin-bottom: 20px;
 }
 .marca-logo {
-    max-height: 50px;
+    max-height: 55px;
     object-fit: contain;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
-/* Estilização do Aviso Subtítulo */
 .aviso-obrigatorio {
-    background: rgba(255, 74, 74, 0.15);
+    background: rgba(255, 74, 74, 0.12);
     border: 1px solid var(--btec-vermelho-alerta);
     padding: 12px;
     border-radius: 8px;
@@ -81,7 +79,6 @@ body {
 .qr-info p { margin: 0; font-size: 11px; color: var(--cor-subtext); text-transform: uppercase; }
 .qr-info strong { color: #fff; display: block; font-size: 15px; margin-top: 2px; }
 
-/* Painel de Respostas Automáticas Contextuais */
 .card-assistente {
     background: #0d2347;
     border-left: 4px solid var(--cor-sucesso);
@@ -112,9 +109,11 @@ input, select, textarea {
     border-radius: 8px;
     color: #fff;
     font-size: 16px;
+    box-sizing: border-box;
 }
+textarea { padding: 12px 16px; height: auto; }
 input:focus, select:focus, textarea:focus {
-    border-color: #fff;
+    border-color: #ffffff;
     outline: none;
 }
 
@@ -137,8 +136,10 @@ button {
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
+    transition: background 0.2s;
 }
 button:active { transform: scale(0.98); }
+
 .hidden { display: none !important; }
 
 #tela-sucesso {
@@ -155,4 +156,9 @@ button:active { transform: scale(0.98); }
     text-align: center;
     max-width: 320px;
     border: 1px solid rgba(255,255,255,0.1);
+}
+.icon-check {
+    font-size: 40px;
+    color: var(--cor-sucesso);
+    margin-bottom: 10px;
 }
