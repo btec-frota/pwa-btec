@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTEC - Painel de Bordo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <div class="container">
+        <div class="marca-header">
+            <img src="btec-logo.png" alt="BTEC Construções" class="marca-logo">
+        </div>
+
+        <div style="text-align: center;">
+            <div id="status-rede" class="online">Aguardando Conexão...</div>
+        </div>
+
+        <form id="form-registro">
+            <div class="qr-info">
+                <div><p>Equipamento</p><strong id="label-prefixo">-</strong></div>
+                <div><p>Família Operacional</p><strong id="label-familia">-</strong></div>
+                <input type="hidden" id="prefixo">
+                <input type="hidden" id="familia">
+            </div>
+
+            <div id="campos-dinamicos"></div>
+
+            <button type="submit" id="btn-finalizar">Finalizar Registro</button>
+        </form>
+
+        <div id="tela-sucesso" class="hidden">
+            <div class="sucesso-card">
+                <div class="icon-check">✓</div>
+                <h3>Registro Processado</h3>
+                <p id="msg-sucesso"></p>
+                <button onclick="fecharSucesso()">Novo Registro</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
