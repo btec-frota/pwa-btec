@@ -1,11 +1,11 @@
 :root {
-    --btec-azul: #182b60;          /* Azul institucional BTEC */
-    --btec-vermelho: #db3826;      /* Vermelho de destaque BTEC */
-    --bg-dark: #0f111a;            /* Grafite escuro industrial */
-    --bg-card: #171b2a;            /* Fundo dos módulos e inputs */
-    --cor-sucesso: #00e676;        /* Verde para valores aceitos */
+    --btec-azul-master: #0a1931;   /* Fundo Azul Sólido Profissional */
+    --btec-azul-card: #15305b;     /* Módulos internos */
+    --btec-azul-input: #1f427b;    /* Caixas de digitação */
+    --btec-vermelho-alerta: #ff4a4a;/* Vermelho para avisos críticos */
+    --cor-sucesso: #00e676;
     --cor-texto: #ffffff;
-    --cor-subtext: #8e94a6;
+    --cor-subtext: #b0c4de;
 }
 
 * {
@@ -16,7 +16,7 @@
 input, textarea { user-select: text; }
 
 body {
-    background-color: var(--bg-dark);
+    background: radial-gradient(circle, #102a54 0%, var(--btec-azul-master) 100%);
     color: var(--cor-texto);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0;
@@ -28,122 +28,131 @@ body {
 .container {
     width: 100%;
     max-width: 440px;
-    background: var(--bg-card);
+    background: var(--btec-azul-card);
     padding: 24px;
     border-radius: 16px;
-    box-shadow: 0 16px 32px rgba(0,0,0,0.5);
-    border-top: 5px solid var(--btec-vermelho); /* Linha conceitual geométrica */
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .marca-header {
     text-align: center;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 .marca-logo {
-    max-height: 55px;
+    max-height: 50px;
     object-fit: contain;
+    margin-bottom: 12px;
+}
+
+/* Estilização do Aviso Subtítulo */
+.aviso-obrigatorio {
+    background: rgba(255, 74, 74, 0.15);
+    border: 1px solid var(--btec-vermelho-alerta);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #ff9999;
+    text-align: left;
 }
 
 #status-rede {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 5px 14px;
+    padding: 4px 12px;
     border-radius: 20px;
     display: inline-block;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 .online { background: rgba(0, 230, 118, 0.1); color: var(--cor-sucesso); }
-.offline { background: rgba(219, 56, 38, 0.1); color: var(--btec-vermelho); }
+.offline { background: rgba(255, 74, 74, 0.1); color: var(--btec-vermelho-alerta); }
 
 .qr-info {
-    background: var(--btec-azul);
+    background: var(--btec-azul-master);
     padding: 14px;
     border-radius: 10px;
-    margin-bottom: 22px;
+    margin-bottom: 18px;
     display: flex;
     justify-content: space-between;
-    border-left: 4px solid var(--btec-vermelho);
+    border-bottom: 2px solid rgba(255,255,255,0.1);
 }
 .qr-info p { margin: 0; font-size: 11px; color: var(--cor-subtext); text-transform: uppercase; }
 .qr-info strong { color: #fff; display: block; font-size: 15px; margin-top: 2px; }
 
-.form-group { margin-bottom: 20px; }
+/* Painel de Respostas Automáticas Contextuais */
+.card-assistente {
+    background: #0d2347;
+    border-left: 4px solid var(--cor-sucesso);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 18px;
+    color: #e0e6ed;
+}
+
+.form-group { margin-bottom: 18px; }
 label {
     font-size: 12px;
     font-weight: 700;
     color: var(--cor-subtext);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: block;
     text-transform: uppercase;
 }
 
 input, select, textarea {
     width: 100%;
-    height: 52px;
+    height: 50px;
     padding: 0 16px;
-    background: #21263c;
-    border: 2px solid #21263c;
+    background: var(--btec-azul-input);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
     color: #fff;
     font-size: 16px;
-    transition: all 0.2s ease;
 }
-textarea { height: auto; padding: 14px; }
 input:focus, select:focus, textarea:focus {
-    border-color: var(--btec-vermelho);
-    background: var(--bg-card);
+    border-color: #fff;
     outline: none;
 }
 
-/* Container de Respostas de Texto Automáticas */
 .alerta-automatica {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    margin-top: 6px;
-    color: var(--cor-subtext);
+    margin-top: 5px;
 }
 .alerta-valido { color: var(--cor-sucesso); }
-.alerta-invalido { color: var(--btec-vermelho); }
+.alerta-invalido { color: var(--btec-vermelho-alerta); }
 
 button {
     width: 100%;
-    height: 54px;
-    background: var(--btec-vermelho);
-    color: #fff;
+    height: 52px;
+    background: #ffffff;
+    color: var(--btec-azul-master);
     border: none;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
-    transition: transform 0.1s ease;
 }
-button:active { transform: scale(0.97); }
+button:active { transform: scale(0.98); }
 .hidden { display: none !important; }
 
 #tela-sucesso {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 17, 26, 0.98);
+    background: var(--btec-azul-master);
     display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(5px);
     z-index: 999;
 }
 .sucesso-card {
-    background: var(--bg-card);
-    padding: 35px;
+    background: var(--btec-azul-card);
+    padding: 30px;
     border-radius: 16px;
     text-align: center;
     max-width: 320px;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-.icon-check {
-    width: 60px; height: 60px;
-    background: rgba(0, 230, 118, 0.1);
-    color: var(--cor-sucesso);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px; margin: 0 auto 14px auto;
+    border: 1px solid rgba(255,255,255,0.1);
 }
