@@ -1,14 +1,14 @@
 {
-  "name": "BTEC Construções - Checklist de Frota",
+  "name": "BTEC Frota Central",
   "short_name": "BTEC Frota",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#0f111a",
-  "theme_color": "#182b60",
+  "background_color": "#0a1931",
+  "theme_color": "#0a1931",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "btec-logo.png",
+      "src": "images.png",
       "sizes": "512x512",
       "type": "image/png"
     }
