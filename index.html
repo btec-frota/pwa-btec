@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BTEC - Painel de Bordo</title>
+    <title>BTEC Frota - Painel do Motorista</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -11,20 +11,27 @@
 
     <div class="container">
         <div class="marca-header">
-            <img src="btec-logo.png" alt="BTEC Construções" class="marca-logo">
+            <img src="btec-logo-azul.png" alt="BTEC Construções" class="marca-logo">
+            
+            <div class="aviso-obrigatorio">
+                <strong>⚠️ ATENÇÃO OPERADOR / MOTORISTA:</strong><br>
+                O preenchimento deste formulário digital <strong>NÃO substitui</strong> a entrega da <strong>Parte Diária em Papel</strong> e do <strong>Checklist Diário</strong>. Ambos devem ser obrigatoriamente preenchidos e entregues ao fim do dia.
+            </div>
         </div>
 
         <div style="text-align: center;">
-            <div id="status-rede" class="online">Aguardando Conexão...</div>
+            <div id="status-rede" class="online">Verificando Conexão...</div>
         </div>
 
         <form id="form-registro">
             <div class="qr-info">
-                <div><p>Equipamento</p><strong id="label-prefixo">-</strong></div>
-                <div><p>Família Operacional</p><strong id="label-familia">-</strong></div>
+                <div><p>Prefixo Equipamento</p><strong id="label-prefixo">-</strong></div>
+                <div><p>Família Frota</p><strong id="label-familia">-</strong></div>
                 <input type="hidden" id="prefixo">
                 <input type="hidden" id="familia">
             </div>
+
+            <div id="painel-assistente-motorista" class="card-assistente hidden"></div>
 
             <div id="campos-dinamicos"></div>
 
@@ -34,9 +41,9 @@
         <div id="tela-sucesso" class="hidden">
             <div class="sucesso-card">
                 <div class="icon-check">✓</div>
-                <h3>Registro Processado</h3>
+                <h3>Registro Salvo</h3>
                 <p id="msg-sucesso"></p>
-                <button onclick="fecharSucesso()">Novo Registro</button>
+                <button onclick="fecharSucesso()">Avançar</button>
             </div>
         </div>
     </div>
