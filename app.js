@@ -1,5 +1,5 @@
 // 🔗 LINK OFICIAL DE INTEGRAÇÃO DA API BTEC CONSTRUÇÕES
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsLDGvP1dWjwZQuI87Hzx3tRYAjmsYuntHCZ4iCw0lQ2u6jJQHr593XQgGbl4KuEta/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhKsHHBVPh_P1jEtNW9efsexqt11bkh4CDQ_VucXSUivftqRC6RNT6hOmQ2UR2S21I/exec";
 
 let db;
 let configuracaoCampos = [];
