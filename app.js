@@ -1,304 +1,186 @@
-// 🔗 LINK OFICIAL DE INTEGRAÇÃO DA API BTEC CONSTRUÇÕES
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhKsHHBVPh_P1jEtNW9efsexqt11bkh4CDQ_VucXSUivftqRC6RNT6hOmQ2UR2S21I/exec";
+// CONFIGURAÇÃO: Insira aqui a URL gerada no "Deploy" do seu Google Apps Script
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/SEU_SCRIPT_ID/exec";
 
-let db;
-let configuracaoCampos = [];
-// Objeto que guardará as informações automáticas vindas da planilha
-let dadosValidacaoBtec = { 
-    ultimoHorimetro: 0, 
-    ultimoOdometro: 0, 
-    linkEquipamento: "",
-    tipoEquipamento: "", // Novo: Tipo/Modelo automático
-    familiaFrota: ""     // Novo: Família automática caso não venha no QR Code
-};
+// Elementos da Interface (DOM)
+const statusRede = document.getElementById("status-rede");
+const labelPrefixo = document.getElementById("label-prefixo");
+const labelFamilia = document.getElementById("label-familia");
+const inputPrefixoHidden = document.getElementById("prefixo");
+const inputFamiliaHidden = document.getElementById("familia");
+const painelAssistente = document.getElementById("painel-assistente-motorista");
+const containerCamposDinamicos = document.getElementById("campos-dinamicos");
+const formRegistro = document.getElementById("form-registro");
+const telaSucesso = document.getElementById("tela-sucesso");
+const msgSucesso = document.getElementById("msg-sucesso");
 
-// 1. PERSISTÊNCIA OFFLINE (IndexedDB)
-const request = indexedDB.open("BtecModuloFrotaDB", 1);
-request.onupgradeneeded = function(e) {
-    db = e.target.result;
-    db.createObjectStore("registros", { keyPath: "id", autoIncrement: true });
-    db.createObjectStore("configuracao", { keyPath: "id" });
-};
-request.onsuccess = function(e) {
-    db = e.target.result;
-    gerenciarFluxoDeRede();
-};
-
-function gerenciarFluxoDeRede() {
-    atualizarIndicadorConexao();
-    window.addEventListener('online', atualizarIndicadorConexao);
-    window.addEventListener('offline', atualizarIndicadorConexao);
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const prefixo = urlParams.get('prefixo') || "BTEC-GERAL";
-    
+// 🌐 1. MONITOR DE CONEXÃO (ONLINE / OFFLINE)
+function atualizarStatusRede() {
     if (navigator.onLine) {
-        // Pede as informações específicas do equipamento para a API
-        fetch(`${GOOGLE_SCRIPT_URL}?prefixo=${prefixo}`)
-            .then(res => res.json())
-            .then(data => {
-                configuracaoCampos = data.configuracao;
-                dadosValidacaoBtec = data.validacao;
-                
-                // Salva no banco local para uso se o sinal cair na próxima vez
-                const tx = db.transaction(["configuracao"], "readwrite");
-                tx.objectStore("configuracao").put({ id: "cache_operacional", configuracao: data.configuracao, validacao: data.validacao });
-                
-                construirInterfaceDinamica(prefixo);
-            }).catch(() => carregarDadosDoCache(prefixo));
+        statusRede.textContent = "SISTEMA ONLINE (BTEC)";
+        statusRede.className = "online";
     } else {
-        carregarDadosDoCache(prefixo);
+        statusRede.textContent = "SISTEMA OFFLINE (MODO CACHE)";
+        statusRede.className = "offline";
     }
 }
+window.addEventListener("online", atualizarStatusRede);
+window.addEventListener("offline", atualizarStatusRede);
 
-function carregarDadosDoCache(prefixo) {
-    const tx = db.transaction(["configuracao"], "readonly");
-    const req = tx.objectStore("configuracao").get("cache_operacional");
-    req.onsuccess = function() {
-        if(req.result) {
-            configuracaoCampos = req.result.configuracao;
-            dadosValidacaoBtec = req.result.validacao;
-            construirInterfaceDinamica(prefixo);
-        }
-    };
-}
-
-// 2. CONSTRUÇÃO DO FORMULÁRIO COM PREENCHIMENTO AUTOMÁTICO DE INFOS
-function construirInterfaceDinamica(prefixo) {
+// 🔍 2. CAPTURAR PARÂMETROS DO QR CODE (URL)
+function obterParametrosURL() {
     const urlParams = new URLSearchParams(window.location.search);
-    
-    // PREENCHIMENTO AUTOMÁTICO: Prioriza a Família que vem da planilha, senão usa a do link, senão 'TRANSPORTE'
-    const familia = (dadosValidacaoBtec.familiaFrota || urlParams.get('familia') || "TRANSPORTE").toUpperCase();
-    
-    // Injeta os dados nos inputs escondidos e nos textos do topo
-    document.getElementById('prefixo').value = prefixo;
-    document.getElementById('familia').value = familia;
-    document.getElementById('label-prefixo').textContent = prefixo;
-    document.getElementById('label-familia').textContent = familia;
-    
-    const wrapper = document.getElementById('campos-dinamicos');
-    wrapper.innerHTML = "";
+    // Caso não venha parâmetro no QR Code, assume o padrão "BTEC-GERAL" e "TRANSPORTE"
+    const prefixo = urlParams.get("prefixo") || "BTEC-GERAL";
+    const familia = urlParams.get("familia") || "TRANSPORTE";
 
-    // Painel superior com atualizações automáticas sobre o veículo
-    const painelMotorista = document.getElementById('painel-assistente-motorista');
-    painelMotorista.classList.remove('hidden');
-    
-    const tipoTexto = dadosValidacaoBtec.tipoEquipamento ? ` do tipo <strong>${dadosValidacaoBtec.tipoEquipamento}</strong>` : "";
-    painelMotorista.innerHTML = `👋 <strong>Olá, Motorista!</strong><br>Veículo ${prefixo}${tipoTexto} identificado com sucesso. Preencha as informações restantes abaixo.`;
-    painelMotorista.style.borderLeftColor = "rgba(255,255,255,0.3)";
+    labelPrefixo.textContent = prefixo.toUpperCase();
+    labelFamilia.textContent = familia.toUpperCase();
+    inputPrefixoHidden.value = prefixo;
+    inputFamiliaHidden.value = familia;
 
-    // Preenchimento automático: Link de Manual/Documentação se existir na planilha
-    if (dadosValidacaoBtec.linkEquipamento) {
-        const btnLink = document.createElement('a');
-        btnLink.href = dadosValidacaoBtec.linkEquipamento;
-        btnLink.target = "_blank";
-        btnLink.textContent = "📂 ACESSAR DOCUMENTAÇÃO / MANUAL DESTE VEÍCULO";
-        btnLink.style = "display:block; text-align:center; background:#1f427b; color:#fff; padding:12px; border-radius:8px; margin-bottom:18px; font-weight:bold; text-decoration:none; border: 1px solid rgba(255,255,255,0.2); font-size:11px; letter-spacing: 0.5px;";
-        wrapper.appendChild(btnLink);
-    }
-    
-    // Monta apenas os campos configurados para a família desse veículo
-    configuracaoCampos.forEach(item => {
-        if (item.familias.includes(familia)) {
-            const group = document.createElement('div');
-            group.className = "form-group";
-            
-            const label = document.createElement('label');
-            label.textContent = item.label + (item.obrigatorio ? " *" : "");
-            group.appendChild(label);
-            
-            let inputField;
-            if (item.tipo === "select") {
-                inputField = document.createElement('select');
-                const placeholder = document.createElement('option'); placeholder.value = ""; placeholder.textContent = "Selecione...";
-                inputField.appendChild(placeholder);
-                item.opcoes.forEach(opt => {
-                    const o = document.createElement('option'); o.value = opt; o.textContent = opt;
-                    inputField.appendChild(o);
-                });
-
-                inputField.addEventListener('change', function() {
-                    if(item.campo === "colaborador" && this.value) {
-                        painelMotorista.innerHTML = `📋 <strong>Operador Ativo:</strong> ${this.value}.<br>Por favor, insira as medições. Lembre-se de preencher a Parte Diária Física!`;
-                        painelMotorista.style.borderLeftColor = "var(--cor-sucesso)";
-                    }
-                });
-
-            } else if (item.tipo === "textarea") {
-                inputField = document.createElement('textarea');
-                inputField.rows = 3;
-            } else if (item.tipo === "file") {
-                inputField = document.createElement('input');
-                inputField.type = "file"; inputField.accept = "image/*";
-                inputField.setAttribute("capture", "environment");
-                
-                const previewImg = document.createElement('img');
-                previewImg.style = "max-width:100%; max-height:140px; display:none; margin-top:8px; border-radius:6px; border: 1px solid rgba(255,255,255,0.2);";
-                group.appendChild(previewImg);
-
-                inputField.addEventListener('change', function(e) {
-                    const arquivo = e.target.files[0];
-                    if (arquivo) {
-                        const reader = new FileReader();
-                        reader.onloadend = function() {
-                            inputField.dataset.base64 = reader.result;
-                            previewImg.src = reader.result;
-                            previewImg.style.display = "block";
-                            feedbackDiv.textContent = "✓ Imagem anexada com sucesso.";
-                            feedbackDiv.className = "alerta-automatica alerta-valido";
-                        }
-                        reader.readAsDataURL(arquivo);
-                    }
-                });
-            } else {
-                inputField = document.createElement('input');
-                inputField.type = "text";
-                
-                if (item.tipo === "number") {
-                    inputField.setAttribute("inputmode", "decimal");
-                    inputField.addEventListener("input", function() {
-                        this.value = this.value.replace(/[^0-9.]/g, '');
-                        if ((this.value.match(/\./g) || []).length > 1) this.value = this.value.replace(/\.+$/, "");
-                        
-                        // Validações cruzadas de histórico baseadas nas informações automáticas da planilha
-                        gerarRespostasTextoParaMotoristas(item.campo, this.value, feedbackDiv, painelMotorista);
-                    });
-                }
-            }
-            
-            inputField.id = `input_${item.campo}`;
-            inputField.dataset.identificador = item.campo;
-            if(item.obrigatorio) inputField.setAttribute("required", "true");
-            
-            group.appendChild(inputField);
-            
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = "alerta-automatica";
-            feedbackDiv.id = `feedback_${item.campo}`;
-            group.appendChild(feedbackDiv);
-            
-            wrapper.appendChild(group);
-        }
-    });
+    carregarFormularioDinamico(prefixo, familia);
 }
 
-// 3. LOGICA DE RESPOSTAS TEXTUAIS COMPARATIVAS
-function gerarRespostasTextoParaMotoristas(campo, valorDigitado, divAlertaLocal, divPainelSuperior) {
-    if(!valorDigitado) { divAlertaLocal.textContent = ""; return; }
-    const valor = Number(valorDigitado);
-    
-    if (campo === "odometro") {
-        const ultimoOdometro = dadosValidacaoBtec.ultimoOdometro;
-        if (valor < ultimoOdometro) {
-            divAlertaLocal.textContent = `❌ KM inconsistente! Quilometragem menor que o último fechamento (${ultimoOdometro} km).`;
-            divAlertaLocal.className = "alerta-automatica alerta-invalido";
-            divPainelSuperior.innerHTML = `🚨 <strong>Erro Detectado:</strong> O odômetro está menor que o histórico consolidado (${ultimoOdometro} km). Corrija para conseguir enviar.`;
-            divPainelSuperior.style.borderLeftColor = "var(--btec-vermelho-alerta)";
-        } else {
-            const diferencaKm = valor - ultimoOdometro;
-            divAlertaLocal.textContent = `✓ Quilometragem válida.`;
-            divAlertaLocal.className = "alerta-automatica alerta-valido";
-            divPainelSuperior.innerHTML = `📈 <strong>Métricas de Viagem:</strong><br>O veículo rodou acumulados <strong>+${diferencaKm} km</strong> desde o último registro.`;
-            divPainelSuperior.style.borderLeftColor = "var(--cor-sucesso)";
-        }
-    }
-    
-    if (campo === "horimetro") {
-        const ultimoHorimetro = dadosValidacaoBtec.ultimoHorimetro;
-        if (valor < ultimoHorimetro) {
-            divAlertaLocal.textContent = `❌ Horímetro inválido! Abaixo do histórico real (${ultimoHorimetro}h).`;
-            divAlertaLocal.className = "alerta-automatica alerta-invalido";
-        } else {
-            const horasTrabalhadas = valor - ultimoHorimetro;
-            divAlertaLocal.textContent = `✓ Horímetro consistente.`;
-            divAlertaLocal.className = "alerta-automatica alerta-valido";
-            if (horasTrabalhadas > 14) {
-                divAlertaLocal.textContent += ` ⚠️ Turno elevado detectado (+${horasTrabalhadas.toFixed(1)}h). Inspecione o nível do óleo.`;
-            }
-        }
+// 📥 3. REQUISITAR CAMPOS DINÂMICOS DA PLANILHA
+async function carregarFormularioDinamico(prefixo, familia) {
+    try {
+        atualizarStatusRede();
+        containerCamposDinamicos.innerHTML = "<p style='text-align:center; font-size:13px; color:var(--cor-subtext);'>A carregar checklist da frota...</p>";
+
+        const urlFinal = `${GOOGLE_SCRIPT_URL}?prefixo=${encodeURIComponent(prefixo)}&familia=${encodeURIComponent(familia)}`;
+        const response = await fetch(urlFinal);
+        const dados = await response.json();
+
+        montarFormularioNaTela(dados.campos);
+        
+        // Exibe mensagem de boas-vindas personalizada no Assistente
+        painelAssistente.innerHTML = `👋 <strong>Olá, Motorista!</strong><br>Veículo <strong>${prefixo}</strong> identificado com sucesso. Preencha as informações restantes abaixo.`;
+        painelAssistente.classList.remove("hidden");
+
+    } catch (erro) {
+        console.error("Erro ao carregar dados online, a tentar cache local...", erro);
+        containerCamposDinamicos.innerHTML = "<p style='text-align:center; color:var(--btec-vermelho-alerta); font-size:12px;'>Falha ao conectar com o servidor. Verifique a internet.</p>";
     }
 }
 
-// 4. SUBMIT FIRST COM FILA DE TRANSMISSÃO
-document.getElementById('form-registro').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    let impedirEnvio = false;
-    document.querySelectorAll('#campos-dinamicos input').forEach(input => {
-        if(input.dataset.identificador === "horimetro" && Number(input.value) < dadosValidacaoBtec.ultimoHorimetro) impedirEnvio = true;
-        if(input.dataset.identificador === "odometro" && Number(input.value) < dadosValidacaoBtec.ultimoOdometro) impedirEnvio = true;
-    });
-    
-    if(impedirEnvio) {
-        alert("Erro Operacional: Impossível prosseguir com medições inferiores ao histórico consolidado!");
+// 🏗️ 4. CONSTRUIR OS ELEMENTOS HTML DE FORMA DINÂMICA
+function montarFormularioNaTela(campos) {
+    containerCamposDinamicos.innerHTML = ""; // Limpa o carregando
+
+    if (!campos || campos.length === 0) {
+        containerCamposDinamicos.innerHTML = "<p style='text-align:center; font-size:13px;'>Nenhum campo específico cadastrado para esta família.</p>";
         return;
     }
-    
-    const mapaRespostas = {};
-    document.querySelectorAll('#campos-dinamicos input, #campos-dinamicos select, #campos-dinamicos textarea').forEach(input => {
-        if (input.type === "file") {
-            mapaRespostas[input.dataset.identificador] = input.dataset.base64 || "";
-        } else {
-            mapaRespostas[input.dataset.identificador] = input.value;
-        }
-    });
-    
-    const pacote = {
-        prefixo: document.getElementById('prefixo').value,
-        familia: document.getElementById('familia').value,
-        respostas: mapaRespostas,
-        dataHora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
-    };
-    
-    const tx = db.transaction(["registros"], "readwrite");
-    tx.objectStore("registros").add(pacote);
-    
-    tx.oncomplete = function() {
-        document.getElementById('msg-sucesso').textContent = navigator.onLine 
-            ? "Conectado! Registro transmitido com sucesso para a planilha central." 
-            : "Você está Offline! O checklist foi guardado na memória e subirá assim que regressar ao pátio.";
-        document.getElementById('tela-sucesso').classList.remove('hidden');
-    };
-});
 
-function atualizarIndicadorConexao() {
-    const status = document.getElementById('status-rede');
-    if (navigator.onLine) {
-        status.textContent = "● Sistema Online (BTEC)"; status.className = "online";
-        sincronizarFilaOcultaComNuvem();
-    } else {
-        status.textContent = "● Modo Campo (Sem Internet)"; status.className = "offline";
-    }
-}
+    campos.forEach(campo => {
+        const formGroup = document.createElement("div");
+        formGroup.className = "form-group";
 
-function sincronizarFilaOcultaComNuvem() {
-    if(!navigator.onLine || !db) return;
-    const tx = db.transaction(["registros"], "readwrite");
-    const store = tx.objectStore("registros");
-    const obterFila = store.getAll();
-    
-    obterFila.onsuccess = function() {
-        const filaPendentes = obterFila.result;
-        if(filaPendentes.length === 0) return;
-        
-        filaPendentes.forEach(registro => {
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(registro)
-            }).then(() => {
-                const txDelecao = db.transaction(["registros"], "readwrite");
-                txDelecao.objectStore("registros").delete(registro.id);
+        // Cria a etiqueta (Label)
+        const label = document.createElement("label");
+        label.setAttribute("for", campo.id);
+        label.innerHTML = campo.obrigatorio ? `${campo.label} <span style="color:var(--btec-vermelho-alerta)">*</span>` : campo.label;
+        formGroup.appendChild(label);
+
+        let inputElement;
+
+        // Estrutura de decisão com base no TIPO (Coluna C em minúsculas)
+        if (campo.tipo === "select") {
+            inputElement = document.createElement("select");
+            
+            // Opção inicial vazia para forçar a escolha
+            const optPlaceholder = document.createElement("option");
+            optPlaceholder.value = "";
+            optPlaceholder.textContent = "Selecione uma opção...";
+            optPlaceholder.disabled = true;
+            optPlaceholder.selected = true;
+            inputElement.appendChild(optPlaceholder);
+
+            // Injeta os itens da lista suspensa (Coluna F)
+            campo.opcoes.forEach(opcao => {
+                const opt = document.createElement("option");
+                opt.value = opacity = opcao;
+                opt.textContent = opcao;
+                inputElement.appendChild(opt);
             });
-        });
+
+        } else if (campo.tipo === "textarea") {
+            inputElement = document.createElement("textarea");
+            inputElement.rows = 3;
+            inputElement.placeholder = "Digite as observações aqui...";
+
+        } else if (campo.tipo === "file") {
+            inputElement = document.createElement("input");
+            inputElement.type = "file";
+            inputElement.accept = "image/*"; // Ativa o gatilho nativo da câmera no telemóvel
+            
+        } else {
+            // Padrão para "text" e "number"
+            inputElement = document.createElement("input");
+            inputElement.type = campo.tipo; // "text" ou "number"
+            inputElement.placeholder = `Introduza o valor para ${campo.label.toLowerCase()}`;
+        }
+
+        // Configura atributos básicos
+        inputElement.id = campo.id;
+        inputElement.name = campo.id;
+        
+        if (campo.obrigatorio) {
+            inputElement.required = true;
+        }
+
+        // Injeta VALOR_PADRAO se existir (Coluna G)
+        if (campo.valorPadrao && campo.tipo !== "file" && campo.tipo !== "select") {
+            inputElement.value = campo.valorPadrao;
+        }
+
+        formGroup.appendChild(inputElement);
+        containerCamposDinamicos.appendChild(formGroup);
+    });
+}
+
+// 📤 5. PROCESSAR E ENVIAR O FORMULÁRIO (SUCESSO COMPARTILHADO ONLINE/OFFLINE)
+formRegistro.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const btnEnvio = document.getElementById("btn-finalizar");
+    btnEnvio.disabled = true;
+    btnEnvio.textContent = "A enviar dados...";
+
+    const pacoteRegistro = {
+        prefixo: inputPrefixoHidden.value,
+        familia: inputFamiliaHidden.value,
+        respostas: {}
     };
-}
 
-function fecharSucesso() {
-    document.getElementById('tela-sucesso').classList.add('hidden');
-    document.getElementById('form-registro').reset();
-    gerenciarFluxoDeRede();
-}
+    // Recolhe dinamicamente os valores de cada input presente no formulário
+    const inputs = containerCamposDinamicos.querySelectorAll("input, select, textarea");
+    
+    for (let input of inputs) {
+        if (input.type === "file") {
+            if (input.files.length > 0) {
+                // Caso tenha foto, converte para string binária (Base64) antes do upload
+                pacoteRegistro.respostas[input.id] = await converterParaBase64(input.files[0]);
+            } else {
+                pacoteRegistro.respostas[input.id] = "";
+            }
+        } else {
+            pacoteRegistro.respostas[input.id] = input.value;
+        }
+    }
 
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    // Executa a transmissão
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors", // Necessário devido às restrições de CORS nativas do Apps Script
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pacoteRegistro)
+        });
+
+        // Caso 1: Sucesso com internet direta para a planilha mestre
+        exibirJanelaSucesso("O seu checklist foi transmitido diretamente para a central da gerência com sucesso!");
+        formRegistro.reset();
+
+    } catch (erro) {
+        console.warn("Falha de rede. Salvando em segundo plano (Modo Offline)...", erro);
