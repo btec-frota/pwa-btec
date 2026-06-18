@@ -1,17 +1,26 @@
-/* ⚠️ SUBTÍTULO OBRIGATÓRIO: Força centralização exclusiva do bloco vermelho */
-.aviso-obrigatorio {
-    background: rgba(255, 74, 74, 0.15);
-    border: 1px solid var(--btec-vermelho-alerta);
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 11px;
-    line-height: 1.5;
-    color: #ff9999;
-    
-    /* Centralização exclusiva */
-    text-align: center;         /* Centraliza o texto interno */
-    margin: 16px auto 0 auto !important; /* Garante o bloco no centro horizontal */
-    display: block !important;  /* Impede que heranças de flexbox do topo alinhem incorretamente */
-    max-width: 95%;             /* Preserva as margens laterais */
-    box-sizing: border-box;
+:root {
+    --btec-azul-master: #0a1931;    /* Tom base da marca */
+    --btec-azul-card: rgba(21, 48, 91, 0.75); /* Cartão semi-transparente para o desfoque */
+    --btec-azul-input: #1f427b;     /* Caixas de digitação */
+    --btec-vermelho-alerta: #ff4a4a; /* Avisos e erros críticos */
+    --cor-sucesso: #00e676;
+    --cor-texto: #ffffff;
+    --cor-subtext: #b0c4de;
 }
+
+* {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+input, textarea, select, button { 
+    font-family: inherit; 
+}
+
+/* 🌟 FUNDO DO SITE: Aplica a logo expandida com desfoque e máscara escura */
+body {
+    background: linear-gradient(rgba(10, 25, 49, 0.88), rgba(10, 25, 49, 0.88)), url('images.png');
+    background-size: cover;
+    background-position: center;
