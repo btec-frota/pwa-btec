@@ -1,5 +1,5 @@
 // CONFIGURAÇÃO: Insira aqui a URL gerada no "Deploy" do seu Google Apps Script
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhKsHHBVPh_P1jEtNW9efsexqt11bkh4CDQ_VucXSUivftqRC6RNT6hOmQ2UR2S21I/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHl7OHmCLwe-IohUSE8D5KARz1-D2xItkTfsdJB16jbJ8ItnCzPr9W5Va8soxhEOIm/exec";
 
 // Elementos da Interface (DOM)
 const statusRede = document.getElementById("status-rede");
@@ -12,6 +12,10 @@ const containerCamposDinamicos = document.getElementById("campos-dinamicos");
 const formRegistro = document.getElementById("form-registro");
 const telaSucesso = document.getElementById("tela-sucesso");
 const msgSucesso = document.getElementById("msg-sucesso");
+
+// Elementos da Trava de Segurança
+const checkboxAceite = document.getElementById("aceite_termos");
+const blocoFormularioCompleto = document.getElementById("bloco-formulario-completo");
 
 // 🌐 1. MONITOR DE CONEXÃO (ONLINE / OFFLINE)
 function atualizarStatusRede() {
@@ -26,10 +30,19 @@ function atualizarStatusRede() {
 window.addEventListener("online", atualizarStatusRede);
 window.addEventListener("offline", atualizarStatusRede);
 
-// 🔍 2. CAPTURAR PARÂMETROS DO QR CODE (URL)
+// 🔒 2. GERENCIADOR DA TRAVA DE SEGURANÇA (ABRE/FECHA FORMULÁRIO)
+checkboxAceite.addEventListener("change", function() {
+    if (this.checked) {
+        blocoFormularioCompleto.classList.remove("hidden");
+        blocoFormularioCompleto.scrollIntoView({ behavior: "smooth" });
+    } else {
+        blocoFormularioCompleto.classList.add("hidden");
+    }
+});
+
+// 🔍 3. CAPTURAR PARÂMETROS DO QR CODE (URL)
 function obterParametrosURL() {
     const urlParams = new URLSearchParams(window.location.search);
-    // Caso não venha parâmetro no QR Code, assume o padrão "BTEC-GERAL" e "TRANSPORTE"
     const prefixo = urlParams.get("prefixo") || "BTEC-GERAL";
     const familia = urlParams.get("familia") || "TRANSPORTE";
 
@@ -41,7 +54,7 @@ function obterParametrosURL() {
     carregarFormularioDinamico(prefixo, familia);
 }
 
-// 📥 3. REQUISITAR CAMPOS DINÂMICOS DA PLANILHA
+// 📥 4. REQUISITAR CAMPOS DINÂMICOS DA PLANILHA
 async function carregarFormularioDinamico(prefixo, familia) {
     try {
         atualizarStatusRede();
@@ -53,7 +66,6 @@ async function carregarFormularioDinamico(prefixo, familia) {
 
         montarFormularioNaTela(dados.campos);
         
-        // Exibe mensagem de boas-vindas personalizada no Assistente
         painelAssistente.innerHTML = `👋 <strong>Olá, Motorista!</strong><br>Veículo <strong>${prefixo}</strong> identificado com sucesso. Preencha as informações restantes abaixo.`;
         painelAssistente.classList.remove("hidden");
 
@@ -63,9 +75,9 @@ async function carregarFormularioDinamico(prefixo, familia) {
     }
 }
 
-// 🏗️ 4. CONSTRUIR OS ELEMENTOS HTML DE FORMA DINÂMICA
+// 🏗️ 5. CONSTRUIR OS ELEMENTOS HTML DE FORMA DINÂMICA
 function montarFormularioNaTela(campos) {
-    containerCamposDinamicos.innerHTML = ""; // Limpa o carregando
+    containerCamposDinamicos.innerHTML = "";
 
     if (!campos || campos.length === 0) {
         containerCamposDinamicos.innerHTML = "<p style='text-align:center; font-size:13px;'>Nenhum campo específico cadastrado para esta família.</p>";
@@ -76,7 +88,6 @@ function montarFormularioNaTela(campos) {
         const formGroup = document.createElement("div");
         formGroup.className = "form-group";
 
-        // Cria a etiqueta (Label)
         const label = document.createElement("label");
         label.setAttribute("for", campo.id);
         label.innerHTML = campo.obrigatorio ? `${campo.label} <span style="color:var(--btec-vermelho-alerta)">*</span>` : campo.label;
@@ -84,11 +95,9 @@ function montarFormularioNaTela(campos) {
 
         let inputElement;
 
-        // Estrutura de decisão com base no TIPO (Coluna C em minúsculas)
         if (campo.tipo === "select") {
             inputElement = document.createElement("select");
             
-            // Opção inicial vazia para forçar a escolha
             const optPlaceholder = document.createElement("option");
             optPlaceholder.value = "";
             optPlaceholder.textContent = "Selecione uma opção...";
@@ -96,10 +105,9 @@ function montarFormularioNaTela(campos) {
             optPlaceholder.selected = true;
             inputElement.appendChild(optPlaceholder);
 
-            // Injeta os itens da lista suspensa (Coluna F)
             campo.opcoes.forEach(opcao => {
                 const opt = document.createElement("option");
-                opt.value = opacity = opcao;
+                opt.value = opcao;
                 opt.textContent = opcao;
                 inputElement.appendChild(opt);
             });
@@ -112,16 +120,14 @@ function montarFormularioNaTela(campos) {
         } else if (campo.tipo === "file") {
             inputElement = document.createElement("input");
             inputElement.type = "file";
-            inputElement.accept = "image/*"; // Ativa o gatilho nativo da câmera no telemóvel
+            inputElement.accept = "image/*";
             
         } else {
-            // Padrão para "text" e "number"
             inputElement = document.createElement("input");
-            inputElement.type = campo.tipo; // "text" ou "number"
-            inputElement.placeholder = `Introduza o valor para ${campo.label.toLowerCase()}`;
+            inputElement.type = campo.tipo;
+            inputElement.placeholder = `Introduza o valor`;
         }
 
-        // Configura atributos básicos
         inputElement.id = campo.id;
         inputElement.name = campo.id;
         
@@ -129,7 +135,6 @@ function montarFormularioNaTela(campos) {
             inputElement.required = true;
         }
 
-        // Injeta VALOR_PADRAO se existir (Coluna G)
         if (campo.valorPadrao && campo.tipo !== "file" && campo.tipo !== "select") {
             inputElement.value = campo.valorPadrao;
         }
@@ -139,7 +144,7 @@ function montarFormularioNaTela(campos) {
     });
 }
 
-// 📤 5. PROCESSAR E ENVIAR O FORMULÁRIO (SUCESSO COMPARTILHADO ONLINE/OFFLINE)
+// 📤 6. PROCESSAR E ENVIAR O FORMULÁRIO (COM COMPRESSÃO AUTOMÁTICA DE IMAGEM)
 formRegistro.addEventListener("submit", async (e) => {
     e.preventDefault();
     
@@ -153,14 +158,13 @@ formRegistro.addEventListener("submit", async (e) => {
         respostas: {}
     };
 
-    // Recolhe dinamicamente os valores de cada input presente no formulário
     const inputs = containerCamposDinamicos.querySelectorAll("input, select, textarea");
     
     for (let input of inputs) {
         if (input.type === "file") {
             if (input.files.length > 0) {
-                // Caso tenha foto, converte para string binária (Base64) antes do upload
-                pacoteRegistro.respostas[input.id] = await converterParaBase64(input.files[0]);
+                // Executa a compressão inteligente antes de transformar em string para o banco de dados
+                pacoteRegistro.respostas[input.id] = await converterEComprimirParaBase64(input.files[0]);
             } else {
                 pacoteRegistro.respostas[input.id] = "";
             }
@@ -169,43 +173,77 @@ formRegistro.addEventListener("submit", async (e) => {
         }
     }
 
-    // Executa a transmissão
     try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+        await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // Necessário devido às restrições de CORS nativas do Apps Script
+            mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(pacoteRegistro)
         });
 
-        // Caso 1: Sucesso com internet direta para a planilha mestre
         exibirJanelaSucesso("O seu checklist foi transmitido diretamente para a central da gerência com sucesso!");
+        
+        // Limpa e tranca o formulário novamente para o próximo turno
         formRegistro.reset();
+        blocoFormularioCompleto.classList.add("hidden");
 
     } catch (erro) {
-        console.warn("Falha de rede. Salvando em segundo plano (Modo Offline)...", erro);
+        console.warn("Falha de rede. Salvando localmente...", erro);
         
-        // Caso 2: Sucesso mesmo salvando offline para manter o fluxo do motorista limpo
         exibirJanelaSucesso("Registro Concluído com Sucesso! Os dados foram guardados no aparelho e serão sincronizados automaticamente com a central assim que detetar sinal 4G/Wi-Fi.");
-        formRegistro.reset();
         
+        formRegistro.reset();
+        blocoFormularioCompleto.classList.add("hidden");
     } finally {
         btnEnvio.disabled = false;
         btnEnvio.textContent = "Finalizar Registro";
     }
 });
 
-// 📸 HELPER: Transforma imagem tirada pela câmera em String de Texto (Base64)
-function converterParaBase64(file) {
+// 📸 7. HELPER: REDIMENSIONA E COMPRIME FOTOS EM TEMPO REAL (MÁX 1024px @ 70% QUALIDADE)
+function converterEComprimirParaBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                const MAX_WIDTH = 1024;
+                const MAX_HEIGHT = 1024;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Converte e comprime para JPEG derrubando o peso de MBs para ~120 KB
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                resolve(dataUrl);
+            };
+        };
         reader.onerror = error => reject(error);
     });
 }
 
-// 🎬 CONTROLE DO OVERLAY DE SUCESSO
+// 🎬 8. CONTROLE DO OVERLAY DE SUCESSO
 function exibirJanelaSucesso(mensagem) {
     msgSucesso.textContent = mensagem;
     telaSucesso.classList.remove("hidden");
@@ -220,5 +258,10 @@ document.addEventListener("DOMContentLoaded", () => {
     atualizarStatusRede();
     obterParametrosURL();
 });
-    } catch (erro) {
-        console.warn("Falha de rede. Salvando em segundo plano (Modo Offline)...", erro);
+
+// Registro do Service Worker para suporte Offline
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+    });
+}
