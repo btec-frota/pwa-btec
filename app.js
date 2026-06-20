@@ -13,8 +13,6 @@ const msgSucesso = document.getElementById("msg-sucesso");
 
 const checkboxAceite = document.getElementById("aceite_termos");
 const avisoNaoConcordo = document.getElementById("aviso-nao-concordo");
-const blocoHistorico = document.getElementById("bloco-historico");
-const listaHistorico = document.getElementById("lista-historico");
 const inputNome = document.getElementById("nome_motorista");
 const btnFinalizar = document.getElementById("btn-finalizar");
 
@@ -23,10 +21,10 @@ let camposSalvosServidor = [];
 function atualizarStatusRede() {
     if (navigator.onLine) {
         statusRede.textContent = "SISTEMA ONLINE (BTEC)";
-        statusRede.style.background = "#2e7d32";
+        statusRede.className = "online";
     } else {
         statusRede.textContent = "SISTEMA OFFLINE (MODO CACHE)";
-        statusRede.style.background = "#c62828";
+        statusRede.className = "offline";
     }
 }
 window.addEventListener("online", atualizarStatusRede);
@@ -34,25 +32,13 @@ window.addEventListener("offline", atualizarStatusRede);
 
 checkboxAceite.addEventListener("change", function() {
     if (this.checked) {
-        avisoNaoConcordo.style.display = "none";
-        blocoHistorico.style.display = "block";
+        avisoNaoConcordo.classList.add("hidden");
         btnFinalizar.textContent = "Finalizar Checklist Completo";
-        btnFinalizar.style.background = "#4caf50";
-        
         montarFormularioNaTela(camposSalvosServidor);
-        buscarHistoricoMotorista(inputNome.value);
     } else {
-        avisoNaoConcordo.style.display = "block";
-        blocoHistorico.style.display = "none";
+        avisoNaoConcordo.classList.remove("hidden");
         containerCamposDinamicos.innerHTML = "";
         btnFinalizar.textContent = "Registrar Presença";
-        btnFinalizar.style.background = "#2196f3";
-    }
-});
-
-inputNome.addEventListener("input", function() {
-    if (checkboxAceite.checked) {
-        buscarHistoricoMotorista(this.value);
     }
 });
 
@@ -81,22 +67,10 @@ async function carregarDadosIniciais(prefixo, familia) {
         const dados = await response.json();
 
         camposSalvosServidor = dados.campos || [];
-        painelAssistente.innerHTML = `🤖 Equipamento <strong>${prefixo}</strong> pronto. Digite seu nome para continuar.`;
+        painelAssistente.innerHTML = `🤖 Equipamento <strong>${prefixo}</strong> pronto. Insira seu nome completo e assinale os termos de consentimento para liberar o checklist.`;
     } catch (erro) {
-        painelAssistente.innerHTML = `❌ <strong>Erro:</strong> Verifique a URL do Script ou permissões.`;
+        painelAssistente.innerHTML = `❌ <strong>Erro:</strong> Não foi possível sincronizar os dados da central.`;
     }
-}
-
-function buscarHistoricoMotorista(nome) {
-    if (!nome.trim()) {
-        listaHistorico.innerHTML = "<em>Digite seu nome completo acima para puxar o histórico.</em>";
-        return;
-    }
-    listaHistorico.innerHTML = `
-        • <strong>Último Turno:</strong> Respondido em Conformidade.<br>
-        • <strong>Frequência:</strong> Operou este equipamento recentemente.<br>
-        • <strong>Status de Bônus:</strong> Elegível e ativo para este período.
-    `;
 }
 
 function montarFormularioNaTela(campos) {
@@ -104,21 +78,17 @@ function montarFormularioNaTela(campos) {
     
     campos.forEach(campo => {
         const formGroup = document.createElement("div");
-        formGroup.style.marginBottom = "15px";
+        formGroup.className = "form-group";
 
         const label = document.createElement("label");
-        label.style.display = "block";
-        label.style.marginBottom = "5px";
-        label.style.fontWeight = "bold";
-        label.style.fontSize = "14px";
-        label.innerHTML = campo.obrigatorio ? `${campo.label} <span style="color:#ff4444">*</span>` : campo.label;
+        label.htmlFor = campo.id;
+        label.innerHTML = campo.obrigatorio ? `${campo.label} *` : campo.label;
         formGroup.appendChild(label);
 
         let inputElement;
 
         if (campo.tipo === "select") {
             inputElement = document.createElement("select");
-            inputElement.style.width = "100%"; inputElement.style.padding = "10px"; inputElement.style.background = "#222"; inputElement.style.color = "#fff"; inputElement.style.borderRadius = "6px";
             const optPlaceholder = document.createElement("option");
             optPlaceholder.value = ""; optPlaceholder.textContent = "Selecione..."; optPlaceholder.disabled = true; optPlaceholder.selected = true;
             inputElement.appendChild(optPlaceholder);
@@ -130,17 +100,22 @@ function montarFormularioNaTela(campos) {
             });
         } else if (campo.tipo === "textarea") {
             inputElement = document.createElement("textarea");
-            inputElement.rows = 3; inputElement.style.width = "100%"; inputElement.style.background = "#222"; inputElement.style.color = "#fff"; inputElement.style.borderRadius = "6px";
+            inputElement.rows = 3;
+            inputElement.placeholder = "Digite as observações...";
         } else if (campo.tipo === "file") {
             inputElement = document.createElement("input");
-            inputElement.type = "file"; inputElement.accept = "image/*";
+            inputElement.type = "file"; 
+            inputElement.accept = "image/*";
         } else {
             inputElement = document.createElement("input");
-            inputElement.type = campo.tipo; inputElement.style.width = "100%"; inputElement.style.padding = "10px"; inputElement.style.background = "#222"; inputElement.style.color = "#fff"; inputElement.style.borderRadius = "6px"; inputElement.style.boxSizing = "border-box";
+            inputElement.type = campo.tipo;
+            inputElement.placeholder = `Preencha o campo...`;
         }
 
-        inputElement.id = campo.id; inputElement.name = campo.id;
+        inputElement.id = campo.id; 
+        inputElement.name = campo.id;
         if (campo.obrigatorio) inputElement.required = true;
+        
         formGroup.appendChild(inputElement);
         containerCamposDinamicos.appendChild(formGroup);
     });
@@ -150,6 +125,7 @@ formRegistro.addEventListener("submit", async (e) => {
     e.preventDefault();
     
     btnFinalizar.disabled = true;
+    const textoOriginalBtn = btnFinalizar.textContent;
     btnFinalizar.textContent = "Enviando dados...";
 
     const pacoteRegistro = {
@@ -185,20 +161,18 @@ formRegistro.addEventListener("submit", async (e) => {
         exibirJanelaSucesso(checkboxAceite.checked ? "Checklist enviado com sucesso!" : "Presença registrada! Lembrete: dados incompletos anulam o bônus.");
         formRegistro.reset();
         checkboxAceite.checked = false;
-        avisoNaoConcordo.style.display = "block";
-        blocoHistorico.style.display = "none";
+        avisoNaoConcordo.classList.remove("hidden");
         containerCamposDinamicos.innerHTML = "";
         btnFinalizar.textContent = "Registrar Presença";
-        btnFinalizar.style.background = "#2196f3";
     } catch (erro) {
-        exibirJanelaSucesso("Erro na rede. Registro armazenado localmente.");
+        exibirJanelaSucesso("Erro na transmissão. Dados salvos localmente no cache.");
     } finally {
         btnFinalizar.disabled = false;
     }
 });
 
 function converterParaBase64(file) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -219,8 +193,13 @@ function converterParaBase64(file) {
     });
 }
 
-function exibirJanelaSucesso(msg) { msgSucesso.textContent = msg; telaSucesso.style.display = "flex"; }
-function fecharSucesso() { telaSucesso.style.display = "none"; }
+function exibirJanelaSucesso(msg) { 
+    msgSucesso.textContent = msg; 
+    telaSucesso.classList.remove("hidden"); 
+}
+function fecharSucesso() { 
+    telaSucesso.classList.add("hidden"); 
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     obterParametrosURL();
