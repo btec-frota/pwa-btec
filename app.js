@@ -43,17 +43,17 @@ async function carregarDadosIniciais(prefixo, familia) {
 
         camposSalvosServidor = dados.campos || [];
         
-        // 🆕 INJEÇÃO DINÂMICA COMPACTA MULTI-COLUNAS (Lê tudo o que tiver a partir da coluna C)
+        // 🆕 INJEÇÃO COMPACTA E ELEGANTE DE MÚLTIPLAS INFORMAÇÕES ADICIONAIS
         if (dados.descricao && dados.descricao.trim() !== "") {
             labelPrefixo.innerHTML = `
                 ${prefixo.toUpperCase()}
-                <span style="display:block; font-size:10px; font-weight:normal; color:#a0aec0; margin-top:5px; text-transform:none; line-height:1.4; white-space:normal; font-style:italic;">
+                <span style="display:block; font-size:10px; font-weight:normal; color:#94a3b8; margin-top:5px; text-transform:none; line-height:1.4; white-space:normal; font-style:italic;">
                     ${dados.descricao}
                 </span>
             `;
         }
 
-        // Renderização inteligente do assistente (Primeiro registro vs Turnos seguintes)
+        // Sistema Inteligente de Alerta de Turno
         if (dados.jaRegistradoHoje) {
             painelAssistente.style.borderLeft = "4px solid #2196f3";
             painelAssistente.innerHTML = `🤖 Equipamento <strong>${prefixo}</strong> já realizou a inspeção matinal hoje. Os campos flexíveis foram configurados como <strong>opcionais</strong> para este turno.`;
@@ -66,7 +66,7 @@ async function carregarDadosIniciais(prefixo, familia) {
         
     } catch (erro) {
         painelAssistente.style.borderLeft = "4px solid #ff4a4a";
-        painelAssistente.innerHTML = `❌ <strong>Erro de Link:</strong> Não foi possível puxar os campos dinâmicos da planilha BTEC.`;
+        painelAssistente.innerHTML = `❌ <strong>Erro de Link:</strong> Não foi possível sincronizar os dados com a planilha BTEC.`;
     }
 }
 
@@ -119,7 +119,7 @@ function montarFormularioDinamico(campos) {
     });
 }
 
-// Lógica de Submissão e Verificação de Horário Limite (16h)
+// Envio do Formulário
 formulario.addEventListener("submit", async (e) => {
     e.preventDefault();
     
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     obterParametrosURL();
     carregarDadosIniciais(paramsGlobais.prefixo, paramsGlobais.familia);
 
-    // 🕒 VERIFICAÇÃO AUTOMÁTICA DE HORÁRIO LIMITE (16h)
+    // 🕒 DISPARADOR DO ALERTA APÓS AS 16h
     const horaAtual = new Date().getHours();
     if (horaAtual >= 16) {
         const alerta = document.createElement("div");
