@@ -3,88 +3,303 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTEC - Painel da Oficina</title>
+    <title>BTEC - Gestão de Oficina</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .card-maquina { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--borda-glass); }
-        .status-badge { display: inline-block; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; margin-top: 5px; text-transform: uppercase; }
-        .status-liberado { background: rgba(0,230,118,0.2); color: #00e676; }
-        .status-bloqueado { background: rgba(255,74,74,0.2); color: #ff4a4a; }
-        .btn-acao { background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; margin-right: 5px; font-weight: bold; }
-        .btn-bloquear { background: #ff4a4a; }
+        .filtro-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--borda-glass);
+        }
+        .seletor-oficina {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            color: #fff;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .card-maquina {
+            background: var(--card-glass);
+            border: 1px solid var(--borda-glass);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .cabecalho-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .prefixo-destaque { font-size: 18px; font-weight: bold; color: #fff; }
+        .familia-sub { font-size: 11px; color: var(--cor-subtext); text-transform: uppercase; }
+        
+        .grid-detalhes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .item-detalhe {
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .detalhe-titulo { font-size: 9px; color: #64748b; font-weight: bold; text-transform: uppercase; display: block; }
+        .detalhe-valor { font-size: 12px; color: #e2e8f0; }
+
+        .status-tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .tag-liberado { background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3); }
+        .tag-bloqueado { background: rgba(255, 74, 74, 0.15); color: #ff4a4a; border: 1px solid rgba(255, 74, 74, 0.3); }
+
+        .acoes-oficina { display: flex; gap: 10px; }
+        .btn-oficina {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-oficina:active { transform: scale(0.95); }
+        .btn-liberar { background: #00e676; color: #0f172a; }
+        .btn-bloquear { background: #ff4a4a; color: #fff; }
+
+        /* ESTILOS DO MODAL SUSPENSO FORÇADO */
+        .modal-oficina {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-conteudo {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 20px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .modal-conteudo h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #fff; }
+        .modal-conteudo label { font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-top: 12px; }
+        .modal-botoes { display: flex; gap: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="container-app" style="max-width: 600px;">
-        <header class="header-logo">
+    <div class="container-app">
+        <header class="header-logo texto-centralizado">
             <img src="images.png" alt="BTEC" class="logo-btec">
-            <h2 style="font-size: 16px; margin-top: 10px; color: var(--cor-subtext)">🔧 PAINEL DE MANUTENÇÃO DA FROTA</h2>
+            <h1 style="font-size: 18px; margin-top: 10px;">PAINEL MECÂNICO BTEC</h1>
         </header>
 
-        <div id="lista-equipamentos">Carregando frota BTEC...</div>
+        <div class="filtro-container">
+            <label style="font-size: 11px; font-weight: bold; color: var(--cor-subtext);">LOCALIZAR EQUIPAMENTO:</label>
+            <select id="select-frota" class="seletor-oficina" onchange="filtrarFrota()">
+                <option value="TODOS">🔍 Listar Toda a Frota</option>
+            </select>
+        </div>
+
+        <div id="lista-cards-oficina">
+            <p class="texto-centralizado" style="color: var(--cor-subtext);">Sincronizando com a nuvem...</p>
+        </div>
+    </div>
+
+    <div id="modalAcao" class="modal-oficina">
+        <div class="modal-conteudo">
+            <h3 id="modalTitulo">Atualizar Equipamento</h3>
+            <form id="formOficina" onsubmit="salvarStatusOficina(event)">
+                <input type="hidden" id="modalPrefixo">
+                <input type="hidden" id="modalStatus">
+
+                <label>NOME DO RESPONSÁVEL TÉCNICO *</label>
+                <input type="text" id="mecanicoNome" class="seletor-oficina" required placeholder="Digite seu nome">
+
+                <label>SITUAÇÃO / MOTIVO DO CHAMADO *</label>
+                <select id="mecanicoMotivo" class="seletor-oficina" required>
+                    <option value="">Selecione um motivo...</option>
+                    <option value="Manutenção Corretiva">🔧 Manutenção Corretiva</option>
+                    <option value="Manutenção Preventiva Padrão">📅 Manutenção Preventiva Padrão</option>
+                    <option value="Troca de Pneus / Rodeiro">🛞 Troca de Pneus / Rodeiro</option>
+                    <option value="Aguardando Peças de Reposição">⏳ Aguardando Peças de Reposição</option>
+                    <option value="Revisão Periódica Concluída">✅ Revisão Periódica Concluída</option>
+                    <option value="Liberação de Pátio / Operacional">🚀 Liberação de Pátio / Operacional</option>
+                </select>
+
+                <label>FOTO DO EQUIPAMENTO / COMPROVANTE (OPCIONAL)</label>
+                <input type="file" id="mecanicoFoto" class="seletor-oficina" accept="image/*" capture="environment" style="background:transparent; border:none; padding:5px 0;">
+
+                <label>DETALHES / OBSERVAÇÕES ADICIONAIS</label>
+                <input type="text" id="mecanicoObs" class="seletor-oficina" placeholder="Escreva observações extras se houver">
+
+                <div class="modal-botoes">
+                    <button type="button" class="btn-oficina" style="background:#475569; color:#fff;" onclick="fecharModal()">CANCELAR</button>
+                    <button type="submit" class="btn-oficina btn-liberar" style="background:#00e676;">CONFIRMAR</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCuSg7QuzCwGnG42TGSrtcVl14lSaq_X5WEzOt4Fv93L7EgS13rah9MZyQp0wsJ564/exec";
+        // Ajuste com a URL do seu Deploy ativo do Apps Script
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCuSg7QuzCwGnG42TGSrtcVl14lSaq_X5WEzOt4Fv93L7EgS13rah9MZyQp0wsJ564/exec"; 
+        let frotaCompleta = [];
 
         async function carregarOficina() {
-            const container = document.getElementById("lista-equipamentos");
             try {
-                const res = await fetch(`${GOOGLE_SCRIPT_URL}?acao=listar_frota`);
-                const maquinas = await res.json();
-                container.innerHTML = "";
-
-                maquinas.forEach(m => {
-                    const card = document.createElement("div");
-                    card.className = "card-maquina";
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <strong>${m.prefixo}</strong> - <span style="color:var(--cor-subtext); font-size:12px;">${m.familia}</span><br>
-                                <span class="status-badge ${m.status === 'BLOQUEADO' ? 'status-bloqueado' : 'status-liberado'}">${m.status}</span>
-                                <p style="font-size:11px; color:var(--cor-subtext); margin-top:5px;">${m.observacao ? 'Obs: ' + m.observacao : ''}</p>
-                            </div>
-                            <div>
-                                <button class="btn-acao" onclick="mudarStatus('${m.prefixo}', 'LIBERADO')">LIBERAR</button>
-                                <button class="btn-acao btn-bloquear" onclick="mudarStatus('${m.prefixo}', 'BLOQUEADO')">BLOQUEAR</button>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?acao=listar_frota`);
+                frotaCompleta = await response.json();
+                
+                const select = document.getElementById("select-frota");
+                if(select.options.length === 1) {
+                    frotaCompleta.forEach(m => {
+                        const opt = document.createElement("option");
+                        opt.value = m.prefixo;
+                        opt.textContent = `${m.prefixo} - ${m.familia}`;
+                        select.appendChild(opt);
+                    });
+                }
+                renderizarCards(frotaCompleta);
             } catch (e) {
-                container.innerHTML = "❌ Erro ao conectar com o servidor da oficina.";
+                document.getElementById("lista-cards-oficina").innerHTML = "❌ Erro ao carregar dados da oficina.";
             }
         }
 
-        async function mudarStatus(prefixo, novoStatus) {
-            const nomeMecanico = prompt("Digite seu nome (Mecânico):");
-            if (!nomeMecanico) return;
-            const obs = prompt(`Motivo/Observação para deixar como ${novoStatus}:`);
+        function renderizarCards(dados) {
+            const container = document.getElementById("lista-cards-oficina");
+            container.innerHTML = "";
+
+            dados.forEach(m => {
+                const card = document.createElement("div");
+                card.className = "card-maquina";
+
+                let htmlDetalhes = "";
+                if (m.observacao) {
+                    const partes = m.observacao.split(" | ");
+                    partes.forEach(p => {
+                        if (p.includes(":")) {
+                            const [label, valor] = p.split(": ");
+                            htmlDetalhes += `
+                                <div class="item-detalhe">
+                                    <span class="detalhe-titulo">${label}</span>
+                                    <span class="detalhe-valor">${valor}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="cabecalho-card">
+                        <div>
+                            <span class="familia-sub">${m.familia}</span>
+                            <div class="prefixo-destaque">${m.prefixo}</div>
+                        </div>
+                        <span class="status-tag ${m.status === 'BLOQUEADO' ? 'tag-bloqueado' : 'tag-liberado'}">
+                            ${m.status}
+                        </span>
+                    </div>
+
+                    <div class="grid-detalhes">
+                        ${htmlDetalhes || '<span style="font-size:10px; color:#64748b">Sem dados patrimoniais</span>'}
+                    </div>
+
+                    <div class="acoes-oficina">
+                        <button class="btn-oficina btn-liberar" onclick="abrirModal('${m.prefixo}', 'LIBERADO')">LIBERAR</button>
+                        <button class="btn-oficina btn-bloquear" onclick="abrirModal('${m.prefixo}', 'BLOQUEADO')">BLOQUEAR</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filtrarFrota() {
+            const val = document.getElementById("select-frota").value;
+            if (val === "TODOS") {
+                renderizarCards(frotaCompleta);
+            } else {
+                const filtrado = frotaCompleta.filter(m => m.prefixo === val);
+                renderizarCards(filtrado);
+            }
+        }
+
+        function abrirModal(prefixo, status) {
+            document.getElementById("modalPrefixo").value = prefixo;
+            document.getElementById("modalStatus").value = status;
+            document.getElementById("modalTitulo").innerHTML = `Configurar <strong>${prefixo}</strong> como <span style="color:${status==='BLOQUEADO'?'#ff4a4a':'#00e676'}">${status}</span>`;
+            document.getElementById("modalAcao").style.display = "flex";
+        }
+
+        function fecharModal() {
+            document.getElementById("formOficina").reset();
+            document.getElementById("modalAcao").style.display = "none";
+        }
+
+        async function salvarStatusOficina(event) {
+            event.preventDefault();
+
+            const prefixo = document.getElementById("modalPrefixo").value;
+            const status = document.getElementById("modalStatus").value;
+            const mecanico = document.getElementById("mecanicoNome").value;
+            const motivo = document.getElementById("mecanicoMotivo").value;
+            const obsExtra = document.getElementById("mecanicoObs").value;
+            const arquivoInput = document.getElementById("mecanicoFoto");
+
+            let logFoto = "Nenhuma foto anexada";
+            if(arquivoInput.files[0]) {
+                logFoto = `Arquivo Anexado: ${arquivoInput.files[0].name}`;
+            }
+
+            // Junta as seleções e a observação para gravar na aba do Google Sheets
+            const observacaoFinalCompleta = `[${motivo}] ${obsExtra} (${logFoto})`;
 
             const payload = {
                 tipo_envio: "mecanico",
                 prefixo: prefixo,
-                status: novoStatus,
-                mecanico: nomeMecanico,
-                observacao: obs || ""
+                status: status,
+                mecanico: mecanico,
+                observacao: observacaoFinalCompleta
             };
 
             try {
+                fecharModal();
+                document.getElementById("lista-cards-oficina").innerHTML = `<p class="texto-centralizado" style="color:#00e676;">⏳ Salvando dados de manutenção de ${prefixo} no banco cloud...</p>`;
+                
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                alert(`Equipamento ${prefixo} definido como ${novoStatus}!`);
+
+                alert(`Status do equipamento ${prefixo} processado!`);
                 carregarOficina();
             } catch (e) {
-                alert("Erro ao salvar alteração.");
+                alert("Falha de comunicação.");
+                carregarOficina();
             }
         }
 
-        document.addEventListener("DOMContentLoaded", carregarOficina);
+        window.onload = carregarOficina;
     </script>
 </body>
 </html>
