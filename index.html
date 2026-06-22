@@ -15,9 +15,10 @@
 
         <div class="status-barra-rede" id="status-rede">Conectado à Nuvem</div>
 
-        <div class="banner-aviso-obrigatorio">
-           <strong>⚠️ ATENÇÃO OPERADOR / MOTORISTA ⚠️</strong><br>
+        <div class="banner-aviso-obrigatorio texto-centralizado">
+      <strong>⚠️ ATENÇÃO OPERADOR / MOTORISTA ⚠️</strong><br>
 O preenchimento deste formulário digital <strong>NÃO substitui</strong> a entrega da <strong>Parte Diária em Papel</strong> e do <strong>Checklist Diário</strong>. Ambos devem ser corretamente preenchidos e entregues nas datas previstas em cada.
+        </div>
 
         <form id="form-registro" class="glass-form">
             <div class="qr-info-box">
@@ -31,7 +32,7 @@ O preenchimento deste formulário digital <strong>NÃO substitui</strong> a entr
                 </div>
             </div>
 
-            <div id="assistente-ia" class="status-box-ia">
+            <div id="assistente-ia" class="status-box-ia texto-centralizado">
                 🤖 Inicializando assistente BTEC...
             </div>
 
@@ -42,16 +43,17 @@ O preenchimento deste formulário digital <strong>NÃO substitui</strong> a entr
 
             <div class="card-consentimento">
                 <label class="container-checkbox">
-                    <input type="checkbox" id="chk-termos" required>
+                    <input type="checkbox" id="chk-termos">
                     <span class="texto-checkbox">
-                        <strong>CONCORDAR COM OS TERMOS:</strong> Declaro que as informações enviadas serão verídicas. Estou ciente de que dados inconsistentes implicam na perda integral da bonificação mensal.
+                        <strong>CONCORDAR COM OS TERMOS:</strong> Declaro que as informações enviadas serão verídicas. Estou ciente de que dados inconsistentes ou a falta de preenchimento implicam na perda integral da bonificação mensal.
                     </span>
                 </label>
             </div>
 
-            <div id="container-campos-dinamicos"></div>
-
-            <button type="submit" id="btn-enviar" class="btn-principal">REGISTRAR OPERAÇÃO</button>
+            <div id="bloco-perguntas-condicionais" style="display: none;">
+                <div id="container-campos-dinamicos"></div>
+                <button type="submit" id="btn-enviar" class="btn-principal">REGISTRAR OPERAÇÃO</button>
+            </div>
         </form>
     </div>
     <script src="app.js"></script>
