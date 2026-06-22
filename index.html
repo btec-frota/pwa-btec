@@ -2,76 +2,58 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BTEC Frota - Painel do Motorista</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTEC - RDO Frota</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <div class="container-app">
+        <header class="header-logo">
+            <img src="images.png" alt="BTEC Construções" class="logo-btec">
+        </header>
 
-    <div class="container">
-       <div class="marca-header">
-            <img src="images.png" alt="BTEC Construções" class="marca-logo">
-            
-            <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 5px 0 15px 0; text-transform: uppercase;">FROTA BTEC - RDO</h2>
-            
-            <div class="aviso-obrigatorio">
-               <strong>⚠️ ATENÇÃO OPERADOR / MOTORISTA ⚠️</strong><br>
-               O preenchimento deste formulário digital <strong>NÃO substitui</strong> a entrega da <strong>Parte Diária em Papel</strong> e do <strong>Checklist Diário</strong>. Ambos devem ser corretamente preenchidos e entregues em suas respectivas datas.
-            </div>
-        </div>
+        <div class="status-barra-rede" id="status-rede">Conectado à Nuvem</div>
 
-        <div style="text-align: center;">
-            <div id="status-rede" class="online">Verificando Conexão...</div>
-        </div>
+        <div class="banner-aviso-obrigatorio">
+           <strong>⚠️ ATENÇÃO OPERADOR / MOTORISTA ⚠️</strong><br>
+O preenchimento deste formulário digital <strong>NÃO substitui</strong> a entrega da <strong>Parte Diária em Papel</strong> e do <strong>Checklist Diário</strong>. Ambos devem ser corretamente preenchidos e entregues nas datas previstas em cada.
 
-        <form id="form-registro">
-            <div class="qr-info">
-                <div>
-                    <p>Prefixo Equipamento</p>
-                    <strong id="label-prefixo">-</strong>
+        <form id="form-registro" class="glass-form">
+            <div class="qr-info-box">
+                <div class="info-grupo">
+                    <span class="info-titulo">PREFIXO EQUIPAMENTO</span>
+                    <div class="info-valor" id="txt-prefixo">Carregando...</div>
                 </div>
-                <div style="text-align: right;">
-                    <p>Família Frota</p>
-                    <strong id="label-familia">-</strong>
+                <div class="info-grupo">
+                    <span class="info-titulo">FAMÍLIA FROTA</span>
+                    <div class="info-valor" id="txt-familia">Carregando...</div>
                 </div>
-                <input type="hidden" id="prefixo">
-                <input type="hidden" id="familia">
             </div>
 
-            <div class="form-group">
-                <label for="nome_motorista">Nome Completo do Motorista *</label>
-                <input type="text" id="nome_motorista" required placeholder="Digite seu nome completo">
+            <div id="assistente-ia" class="status-box-ia">
+                🤖 Inicializando assistente BTEC...
             </div>
 
-            <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; text-transform: none; letter-spacing: normal;">
-                    <input type="checkbox" id="aceite_termos" style="width: 22px; height: 22px; margin: 0; flex-shrink: 0; cursor: pointer;">
-                    <span><strong>CONCORDAR COM OS TERMOS:</strong> Declaro que as informações enviadas serão verídicas. Estou ciente de que dados inconsistentes ou a falta de preenchimento implicam na <strong>perda integral da bonificação mensal</strong>.</span>
+            <div class="campo-base">
+                <label for="nome-motorista">NOME COMPLETO DO MOTORISTA *</label>
+                <input type="text" id="nome-motorista" required placeholder="Digite seu nome completo">
+            </div>
+
+            <div class="card-consentimento">
+                <label class="container-checkbox">
+                    <input type="checkbox" id="chk-termos" required>
+                    <span class="texto-checkbox">
+                        <strong>CONCORDAR COM OS TERMOS:</strong> Declaro que as informações enviadas serão verídicas. Estou ciente de que dados inconsistentes implicam na perda integral da bonificação mensal.
+                    </span>
                 </label>
             </div>
 
-            <div id="aviso-nao-concordo" class="alerta-automatica alerta-invalido" style="margin-bottom: 18px; padding: 0 4px;">
-                ℹ️ <strong>Nota:</strong> Caso não concorde com os termos acima, insira apenas o seu nome completo no campo acima e clique no botão enviar logo abaixo para registrar seu turno de presença.
-            </div>
+            <div id="container-campos-dinamicos"></div>
 
-            <div id="painel-assistente-motorista" class="card-assistente">Buscando informações operacionais...</div>
-
-            <div id="campos-dinamicos"></div>
-
-            <button type="submit" id="btn-finalizar">Registrar Presença</button>
+            <button type="submit" id="btn-enviar" class="btn-principal">REGISTRAR OPERAÇÃO</button>
         </form>
     </div>
-
-    <div id="tela-sucesso" class="hidden">
-        <div class="sucesso-card">
-            <div class="icon-check">✓</div>
-            <h3>Registro Salvo</h3>
-            <p id="msg-sucesso"></p>
-            <button type="button" onclick="fecharSucesso()" style="background: #ffffff; color: #0a1931; height: 44px;">Avançar</button>
-        </div>
-    </div>
-
     <script src="app.js"></script>
 </body>
 </html>
